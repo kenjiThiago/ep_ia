@@ -1,5 +1,11 @@
 import numpy as np
 
+def tanh(entrada):
+    return np.tanh(entrada)
+
+def tanh_derivada(x):
+    return 1 - x**2
+
 def sigmoid(entrada):
     return 1 / (1 + np.exp(-entrada))
 
@@ -7,8 +13,8 @@ def sigmoid_derivada(x):
     return x * (1 - x)
 
 def inicia_pesos(numero_pesos_escondida, neuronios_camada_escondida, neuronios_camada_saida):
-    pesos_camada_escondida = np.random.uniform(-1, 1, (neuronios_camada_escondida, numero_pesos_escondida))
-    pesos_camada_saida = np.random.uniform(-1, 1, (neuronios_camada_saida, neuronios_camada_escondida + 1))
+    pesos_camada_escondida = np.random.uniform(-0.01, 0.01, (neuronios_camada_escondida, numero_pesos_escondida))
+    pesos_camada_saida = np.random.uniform(-0.01, 0.01, (neuronios_camada_saida, neuronios_camada_escondida + 1))
     return pesos_camada_escondida, pesos_camada_saida
 
 def forward_pass(pesos_camada_escondida, pesos_camada_saida, entrada):
