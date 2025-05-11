@@ -2,14 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def tanh(entrada):
-    return np.tanh(entrada)
-
-
-def tanh_derivada(x):
-    return 1 - x**2
-
-
 def sigmoid(entrada):
     return 1 / (1 + np.exp(-entrada))
 
@@ -61,7 +53,7 @@ def backpropagation(
 
 
 def treinar_epocas(
-        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid=None, y_valid=None
+        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
 ):
     erros = []
     erros_validacao = []
@@ -81,23 +73,15 @@ def treinar_epocas(
         erros.append(erro_total / x_train.shape[0])
 
         if x_valid is not None and y_valid is not None:
-            erros_validacao.append(
-                validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida)
-            )
+            erros_validacao.append(validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida))
 
     return pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao
 
-def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos):
-    numero_pesos_escondida = x_train.shape[1]
-    neuronios_camada_saida = y_train.shape[1]
 
-    pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
-
-    pesos_camada_escondida, pesos_camada_saida, erros, _ = treinar_epocas(
-        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas
-    )
-
+def plotar_erro(erros, erros_validacao):
     plt.plot(erros, label="Erro")
+    if len(erros_validacao) != 0:
+        plt.plot(erros_validacao, label="Erro Validação")
     plt.xlabel("Épocas")
     plt.ylabel("Erro Quadrático Médio (MSE)")
     plt.legend()
@@ -105,10 +89,22 @@ def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_oculto
     plt.tight_layout()
     plt.show()
 
+
+def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plotar=True):
+    numero_pesos_escondida = x_train.shape[1]
+    neuronios_camada_saida = y_train.shape[1]
+
+    pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
+
+    pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
+        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
+    )
+    if plotar: plotar_erro(erros, erros_validacao)
+
     return pesos_camada_escondida, pesos_camada_saida
 
 
-def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao):
+def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plotar=True):
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
 
@@ -118,28 +114,12 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
     x_valid = entradas_brutas[(num_amostras - tamanho_validacao) :]
     y_valid = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
-    numero_pesos_escondida = x_train.shape[1]
-    neuronios_camada_saida = y_train.shape[1]
-
-    pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
-
-    pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
-        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
-    )
-
-    plt.plot(erros, label="Erro")
-    plt.plot(erros_validacao, label="Erro Validação")
-    plt.xlabel("Épocas")
-    plt.ylabel("Erro Quadrático Médio (MSE)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    pesos_camada_escondida, pesos_camada_saida = treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid, y_valid, plotar)
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
-def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds):
+def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plotar=True):
     tamanho_treinamento = x_train.shape[0]
     fold_size = tamanho_treinamento // numero_folds
 
@@ -151,9 +131,9 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     fold = 0
     for f in range(numero_folds):
         print(f"Fold {f}")
+
         inicio = f * fold_size
         fim = inicio + fold_size if f < numero_folds - 1 else tamanho_treinamento
-        print(fim - inicio)
 
         x_fold_valid = x_train[inicio:fim]
         y_fold_valid = y_train[inicio:fim]
@@ -161,14 +141,7 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         x_fold_train = np.concatenate((x_train[:inicio], x_train[fim:]), axis=0)
         y_fold_train = np.concatenate((y_train[:inicio], y_train[fim:]), axis=0)
 
-        numero_pesos_escondida = x_fold_train.shape[1]
-        neuronios_camada_saida = y_fold_train.shape[1]
-
-        pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
-
-        pesos_camada_escondida, pesos_camada_saida, _, _ = treinar_epocas(
-            x_fold_train, y_fold_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas
-        )
+        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
         acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida)
 
         acuracias.append(acuracia)
