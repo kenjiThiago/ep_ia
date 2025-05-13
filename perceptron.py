@@ -58,6 +58,11 @@ def treinar_epocas(
     erros = []
     erros_validacao = []
 
+    menor_erro_validacao = 100
+    melhor_epoca = 0
+    melhores_pesos_camada_escondida = pesos_camada_escondida
+    melhores_pesos_camada_saida = pesos_camada_saida
+
     for i in range(epocas):
         if i % 100 == 0:
             print(f"Época {i} concluída")
@@ -70,12 +75,26 @@ def treinar_epocas(
 
             erro_total += erro
 
-        erros.append(erro_total / x_train.shape[0])
+        erro_medio = erro_total / x_train.shape[0]
+        erros.append(erro_medio)
 
         if x_valid is not None and y_valid is not None:
-            erros_validacao.append(validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida))
+            erro_validacao_atual = validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida)
+            erros_validacao.append(erro_validacao_atual)
 
-    return pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao
+            if erro_validacao_atual < menor_erro_validacao:
+                melhor_epoca = i
+                menor_erro_validacao = erro_validacao_atual
+                melhores_pesos_camada_escondida = pesos_camada_escondida
+                melhores_pesos_camada_saida = pesos_camada_saida
+        else:
+            melhores_pesos_camada_escondida = pesos_camada_escondida
+            melhores_pesos_camada_saida = pesos_camada_saida
+
+    if x_valid is not None and y_valid is not None:
+        print(melhor_epoca, menor_erro_validacao)
+
+    return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
 
 
 def plotar_erro(erros, erros_validacao):
