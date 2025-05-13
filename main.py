@@ -3,6 +3,7 @@ import perceptron as pc
 import argparse
 
 
+# Faz o parse dos argumentos
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Treinamento de rede neural para reconhecimento de letras."
@@ -51,6 +52,7 @@ def parse_args():
     return args
 
 
+# Recebe os argumentos da linha de comando
 args = parse_args()
 
 # Carrega os dados de entrada (features) e os ajusta para ter 120 colunas por amostra
