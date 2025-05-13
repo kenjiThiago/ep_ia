@@ -217,7 +217,7 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         y_fold_train = np.concatenate((y_train[:inicio], y_train[fim:]), axis=0)
 
         pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
-        acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida)
+        acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
 
         acuracias.append(acuracia)
         if acuracia > melhor_acuracia:
@@ -249,7 +249,7 @@ def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camad
 
 
 # Testa a rede comparando a classe prevista com a esperada
-def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida):
+def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, plot_matriz=True):
     acertos = 0
     total = entradas.shape[0]
     verdadeiras = []
@@ -269,9 +269,10 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         if classe_prevista == classe_real:
             acertos += 1
 
-    matriz = confusion_matrix(verdadeiras, previstas)
-    print("Matriz de Confusão:")
-    plotar_confusion_matrix(matriz)
+    if plot_matriz:
+        matriz = confusion_matrix(verdadeiras, previstas)
+        print("Matriz de Confusão:")
+        plotar_confusion_matrix(matriz)
 
     acuracia = acertos / total
     return acuracia
