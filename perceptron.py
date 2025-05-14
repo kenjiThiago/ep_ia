@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
 
 
 # Função de ativação sigmoide
@@ -274,6 +275,9 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
     if print_resultado:
         print("\n=======Resultados Teste=======")
         print(f"Acurácia final no conjunto de teste: {acuracia:}")
+
+        f1 = f1_score(verdadeiras, previstas, average="macro")
+        print(f"F1-score (macro): {f1:.4f}")
 
         matriz = confusion_matrix(verdadeiras, previstas)
         plotar_confusion_matrix(matriz)
