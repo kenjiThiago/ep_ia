@@ -1,4 +1,24 @@
-# Como Rodar o Código
+# EP1 IA
+
+## Ambiente virtual python
+
+```sh
+python -m venv .venv
+```
+
+```sh
+source .venv/bin/activate
+```
+
+
+## Instalar as dependências
+
+```sh
+pip install -r requirements.txt
+```
+
+
+## Como Rodar o Código
 
 ```sh
 usage: main.py [-h] -m {simples,validacao,kfold} -n NEURONIOS -t TAXA -e EPOCAS [-f FOLDS] [-p {True,False}]
