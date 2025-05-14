@@ -111,4 +111,4 @@ x_test = entradas_brutas[(num_amostras - tamanho_treinamento) :]
 y_test = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
 
 # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
-print(pc.testar_rede(x_test, y_test, pesos_camada_escondida, pesos_camada_saida))
+acuracia = pc.testar_rede(x_test, y_test, pesos_camada_escondida, pesos_camada_saida)

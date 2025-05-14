@@ -119,7 +119,7 @@ def treinar_epocas(
             melhores_pesos_camada_saida = pesos_camada_saida
 
     if x_valid is not None and y_valid is not None:
-        print("Época:", melhor_epoca, "Menor erro validação:", menor_erro_validacao)
+        print(f"Melhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
 
     return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
 
@@ -226,9 +226,10 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
             melhor_pesos_camada_saida = np.copy(pesos_camada_saida)
             fold = f
 
-    print(fold)
-    print(acuracias)
-    print(np.mean(acuracias), np.std(acuracias, ddof=1))
+    print("\n=======Resultados k-fold=======")
+    print(f"Fold com melhor acuracia: {fold}")
+    print(f"Acurácias por fold:\n{acuracias}")
+    print(f"Média da acurácia: {np.mean(acuracias):.4f} | Desvio padrão: {np.std(acuracias, ddof=1):.4f}")
 
     return melhor_pesos_camada_escondida, melhor_pesos_camada_saida
 
@@ -249,7 +250,7 @@ def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camad
 
 
 # Testa a rede comparando a classe prevista com a esperada
-def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, plot_matriz=True):
+def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, print_resultado=True):
     acertos = 0
     total = entradas.shape[0]
     verdadeiras = []
@@ -269,10 +270,12 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         if classe_prevista == classe_real:
             acertos += 1
 
-    if plot_matriz:
+    acuracia = acertos / total
+    if print_resultado:
+        print("\n=======Resultados Teste=======")
+        print(f"Acurácia final no conjunto de teste: {acuracia:}")
+
         matriz = confusion_matrix(verdadeiras, previstas)
-        print("Matriz de Confusão:")
         plotar_confusion_matrix(matriz)
 
-    acuracia = acertos / total
     return acuracia
