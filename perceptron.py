@@ -228,8 +228,8 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
 
-        acertos_totais += int(acuracia * x_fold_train.shape[0])
-        total_testes += x_fold_train.shape[0]
+        acertos_totais += int(acuracia * x_fold_valid.shape[0])
+        total_testes += x_fold_valid.shape[0]
 
         if acuracia > melhor_acuracia:
             melhor_acuracia = acuracia
