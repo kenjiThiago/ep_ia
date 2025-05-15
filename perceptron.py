@@ -97,16 +97,13 @@ def treinar_epocas(
 
     # Loop principal de treinamento
     for i in range(epocas):
-        # Feedback a cada 50 épocas
         if (i + 1) % 50 == 0:
             print(f"{i + 1} épocas concluídas")
         erro_total = 0
 
         # Itera por todas as amostras de treino
         for x_i, y_i in zip(x_train, y_train):
-            # Passagem direta (forward) da entrada pela rede
             saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
-            # Backpropagation: calcula gradientes e atualiza pesos
             pesos_camada_escondida, pesos_camada_saida, erro = backpropagation(
                 pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
             )
@@ -228,6 +225,7 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
 # Treinamento com K-Fold Cross Validation
 def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plotar=True):
     tamanho_treinamento = x_train.shape[0]
+
     # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
     indices = np.arange(tamanho_treinamento)
     np.random.shuffle(indices)
