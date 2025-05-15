@@ -56,21 +56,21 @@ def backpropagation(
     erro_saida = y_i - predicao_final
 
     # Gradiente da camada de saída:
-    # delta_saida = erro_saida * σ'(y_hat)
-    delta_saida = erro_saida * sigmoid_derivada(predicao_final)
+    # sigma_saida = erro_saida * σ'(y_hat)
+    sigma_saida = erro_saida * sigmoid_derivada(predicao_final)
 
     # Cálculo da influência dos erros da saída na camada oculta:
-    # soma_escondida = W_saida.T * delta_saida  (sem incluir o bias)
-    soma_escondida = np.dot(pesos_camada_saida[:, 1:].T, delta_saida)
+    # soma_escondida = W_saida.T * sigma_saida  (sem incluir o bias)
+    soma_escondida = np.dot(pesos_camada_saida[:, 1:].T, sigma_saida)
 
     # Gradiente da camada oculta:
-    # delta_escondida = soma_escondida * σ'(ativação_oculta)
-    delta_escondida = soma_escondida * sigmoid_derivada(saida_camada_escondida[1:])
+    # sigma_escondida = soma_escondida * σ'(ativação_oculta)
+    sigma_escondida = soma_escondida * sigmoid_derivada(saida_camada_escondida[1:])
 
     # Atualização dos pesos com gradiente descendente:
-    # W += taxa * delta * entrada_transposta
-    pesos_camada_saida += taxa_aprendizado * np.outer(delta_saida, saida_camada_escondida)
-    pesos_camada_escondida += taxa_aprendizado * np.outer(delta_escondida, x_i)
+    # W += taxa * sigma * entrada_transposta
+    pesos_camada_saida += taxa_aprendizado * np.outer(sigma_saida, saida_camada_escondida)
+    pesos_camada_escondida += taxa_aprendizado * np.outer(sigma_escondida, x_i)
 
     # Erro quadrático total da amostra
     erro = np.sum(erro_saida**2)
