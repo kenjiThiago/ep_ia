@@ -102,13 +102,14 @@ else:
     # 3. Treinamento com K-Fold Cross Validation
     # Divide o conjunto de treino em K partes, treina com K-1 e valida com 1, repetindo K vezes
     # Retorna os pesos que obtiveram melhor desempenho médio na validação
-    pesos_camada_escondida, pesos_camada_saida = pc.treinamento_folds(
+    pc.treinamento_folds(
         x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, folds, plot
     )
+    exit(0)
 
 # Separa os dados de teste (últimas 130 amostras)
 x_test = entradas_brutas[(num_amostras - tamanho_treinamento) :]
 y_test = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
 
 # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
-acuracia = pc.testar_rede(x_test, y_test, pesos_camada_escondida, pesos_camada_saida)
+pc.testar_rede(x_test, y_test, pesos_camada_escondida, pesos_camada_saida)

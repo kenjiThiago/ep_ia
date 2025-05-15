@@ -210,10 +210,9 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     total_testes = 0
     acuracias = []
 
-    melhor_acuracia = 0
-    melhor_pesos_camada_escondida = None
-    melhor_pesos_camada_saida = None
-    fold = 0
+    todos_reais = []
+    todos_previstos = []
+
     for f in range(numero_folds):
         print(f"=======Fold {f+1}/{numero_folds}=======")
 
@@ -225,27 +224,26 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
 
         pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
 
-        acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
+        acuracia, reais, previstos = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
+        todos_reais += reais
+        todos_previstos += previstos
 
         acertos_totais += int(acuracia * x_fold_valid.shape[0])
         total_testes += x_fold_valid.shape[0]
-
-        if acuracia > melhor_acuracia:
-            melhor_acuracia = acuracia
-            melhor_pesos_camada_escondida = np.copy(pesos_camada_escondida)
-            melhor_pesos_camada_saida = np.copy(pesos_camada_saida)
-            fold = f + 1
 
     media_acuracia = acertos_totais / total_testes
     desvio_padrao = np.std(acuracias, ddof=1)
 
     print("\n=======Resultados k-fold=======")
-    print(f"Fold com melhor acuracia: {fold}")
-    print(f"Acurácias por fold:\n{acuracias}")
-    print(f"Média da acurácia: {media_acuracia} | Desvio padrão: {desvio_padrao}")
 
-    return melhor_pesos_camada_escondida, melhor_pesos_camada_saida
+    print(f"Acurácias por fold:\n{acuracias}")
+    print(f"Média da acurácia: {media_acuracia} ({acertos_totais}/{total_testes}) | Desvio padrão: {desvio_padrao}")
+
+    f1 = f1_score(todos_reais, todos_previstos, average="macro")
+    print(f"F1-score (macro): {f1:.4f}")
+    matriz = confusion_matrix(todos_reais, todos_previstos)
+    plotar_confusion_matrix(matriz)
 
 
 # Calcula erro quadrático médio em um conjunto de validação
@@ -295,4 +293,4 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         matriz = confusion_matrix(verdadeiras, previstas)
         plotar_confusion_matrix(matriz)
 
-    return acuracia
+    return acuracia, verdadeiras, previstas
