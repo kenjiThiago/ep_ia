@@ -82,46 +82,66 @@ def backpropagation(
 def treinar_epocas(
         x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
 ):
+    # Lista para armazenar o erro quadrático médio (EQM) de cada época
     erros = []
+    # Lista para armazenar o erro de validação, caso fornecido
     erros_validacao = []
 
+    # Inicializa o menor erro de validação com um valor alto
     menor_erro_validacao = 100
+
+    # Inicializa os melhores pesos e a melhor época
     melhor_epoca = 0
     melhores_pesos_camada_escondida = pesos_camada_escondida
     melhores_pesos_camada_saida = pesos_camada_saida
 
+    # Loop principal de treinamento
     for i in range(epocas):
+        # Feedback a cada 50 épocas
         if (i + 1) % 50 == 0:
             print(f"{i + 1} épocas concluídas")
         erro_total = 0
+
+        # Itera por todas as amostras de treino
         for x_i, y_i in zip(x_train, y_train):
+            # Passagem direta (forward) da entrada pela rede
             saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
+            # Backpropagation: calcula gradientes e atualiza pesos
             pesos_camada_escondida, pesos_camada_saida, erro = backpropagation(
                 pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
             )
 
+            # Acumula o erro da amostra
             erro_total += erro
 
+        # Calcula o erro médio da época atual e armazena
         erro_medio = erro_total / x_train.shape[0]
         erros.append(erro_medio)
 
-        # Validação (opcional)
+        # Validação, se fornecida
         if x_valid is not None and y_valid is not None:
+            # Calcula o erro quadrático médio no conjunto de validação
             erro_validacao_atual = validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida)
             erros_validacao.append(erro_validacao_atual)
 
+            # Atualiza os melhores pesos se o erro de validação foi o menor até agora
             if erro_validacao_atual < menor_erro_validacao:
                 melhor_epoca = i
                 menor_erro_validacao = erro_validacao_atual
                 melhores_pesos_camada_escondida = pesos_camada_escondida
                 melhores_pesos_camada_saida = pesos_camada_saida
         else:
+            # Se não há validação, os melhores pesos são os atuais
             melhores_pesos_camada_escondida = pesos_camada_escondida
             melhores_pesos_camada_saida = pesos_camada_saida
+        # Critério de parada antecipada: se o erro for muito pequeno
         if erro_medio < 5e-3:
             break
 
+    # Imprime o erro final de treino
     print(f"\nErro Quadrático Médio Final: {erros[-1]}")
+
+    # Se houver validação, exibe a melhor época e o menor erro de validação
     if x_valid is not None and y_valid is not None:
         print(f"\nMelhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
 
@@ -171,11 +191,16 @@ def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_oculto
     numero_pesos_escondida = x_train.shape[1]
     neuronios_camada_saida = y_train.shape[1]
 
+    # Inicializa os pesos das camadas
     pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
 
+    # Executa o treinamento por múltiplas épocas
+    # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
     pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
         x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
     )
+
+    # Se habilitado, plota o gráfico do erro por época
     if plotar: plotar_erro(erros, erros_validacao)
 
     return pesos_camada_escondida, pesos_camada_saida
@@ -186,12 +211,15 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
 
+    # Separa os dados em treino e validação
+    # Os últimos 'tamanho_validacao' exemplos são usados como validação
     x_train = entradas_brutas[: (num_amostras - tamanho_validacao)]
     y_train = saidas_desejadas[: (total_saidas - tamanho_validacao)]
 
     x_valid = entradas_brutas[(num_amostras - tamanho_validacao) :]
     y_valid = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
+    # Treina a rede com os dados de treino e valida com os dados separados
     pesos_camada_escondida, pesos_camada_saida = treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid, y_valid, plotar)
 
     return pesos_camada_escondida, pesos_camada_saida
@@ -200,41 +228,54 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
 # Treinamento com K-Fold Cross Validation
 def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plotar=True):
     tamanho_treinamento = x_train.shape[0]
+    # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
     indices = np.arange(tamanho_treinamento)
     np.random.shuffle(indices)
 
+    # Aplica a permutação às entradas e saídas
     x_train = x_train[indices]
     y_train = y_train[indices]
 
+    # Divide os dados embaralhados em 'numero_folds' partes iguais (ou quase iguais)
     folds_x = np.array_split(x_train, numero_folds)
     folds_y = np.array_split(y_train, numero_folds)
 
-    acertos_totais = 0
-    total_testes = 0
-    acuracias = []
+    # Variáveis para computar estatísticas globais
+    acertos_totais = 0          # Soma de acertos de todos os folds
+    total_testes = 0            # Total de amostras testadas
+    acuracias = []              # Lista com acurácia de cada fold
 
-    todos_reais = []
-    todos_previstos = []
+    todos_reais = []            # Lista com todas as classes reais de todos os folds
+    todos_previstos = []        # Lista com todas as classes previstas pela rede
 
+    # Loop principal dos folds
     for f in range(numero_folds):
         print(f"=======Fold {f+1}/{numero_folds}=======")
 
+        # Separa os dados de validação (o fold atual)
         x_fold_valid = folds_x[f]
         y_fold_valid = folds_y[f]
 
+        # Concatena os demais folds para formar o conjunto de treino
         x_fold_train = np.concatenate([folds_x[j] for j in range(numero_folds) if j != f])
         y_fold_train = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
 
+        # Treina a rede com os dados do fold atual
         pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
 
+        # Avalia a rede no fold de validação
         acuracia, reais, previstos = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
+
+        # Acumula os rótulos reais e as predições para métricas globais
         todos_reais += reais
         todos_previstos += previstos
 
+        # Acumula estatísticas de acerto
         acertos_totais += int(acuracia * x_fold_valid.shape[0])
         total_testes += x_fold_valid.shape[0]
 
+    # Calcula estatísticas finais após todos os folds
     media_acuracia = acertos_totais / total_testes
     desvio_padrao = np.std(acuracias, ddof=1)
 
@@ -243,8 +284,11 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     print(f"Acurácias por fold:\n{acuracias}")
     print(f"Média da acurácia: {media_acuracia} ({acertos_totais}/{total_testes}) | Desvio padrão: {desvio_padrao}")
 
+    # F1-score global macro (avalia equilíbrio entre precisão e revocação)
     f1 = f1_score(todos_reais, todos_previstos, average="macro")
     print(f"F1-score (macro): {f1:.4f}")
+
+    # Matriz de confusão global
     matriz = confusion_matrix(todos_reais, todos_previstos)
     plotar_confusion_matrix(matriz)
 
