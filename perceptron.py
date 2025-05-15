@@ -118,7 +118,10 @@ def treinar_epocas(
         else:
             melhores_pesos_camada_escondida = pesos_camada_escondida
             melhores_pesos_camada_saida = pesos_camada_saida
+        if erro_medio < 5e-3:
+            break
 
+    print(f"\nErro Quadrático Médio Final: {erros[-1]}")
     if x_valid is not None and y_valid is not None:
         print(f"\nMelhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
 
