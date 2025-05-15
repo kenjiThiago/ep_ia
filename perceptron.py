@@ -91,8 +91,8 @@ def treinar_epocas(
     melhores_pesos_camada_saida = pesos_camada_saida
 
     for i in range(epocas):
-        if i % 100 == 0:
-            print(f"Época {i} concluída")
+        if (i + 1) % 50 == 0:
+            print(f"{i + 1} épocas concluídas")
         erro_total = 0
         for x_i, y_i in zip(x_train, y_train):
             saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
