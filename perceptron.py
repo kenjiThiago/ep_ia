@@ -120,7 +120,7 @@ def treinar_epocas(
             melhores_pesos_camada_saida = pesos_camada_saida
 
     if x_valid is not None and y_valid is not None:
-        print(f"Melhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
+        print(f"\nMelhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
 
     return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
 
@@ -274,7 +274,7 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
     acuracia = acertos / total
     if print_resultado:
         print("\n=======Resultados Teste=======")
-        print(f"Acurácia final no conjunto de teste: {acuracia:}")
+        print(f"Acurácia final no conjunto de teste: {acuracia} ({acertos}/{total})")
 
         f1 = f1_score(verdadeiras, previstas, average="macro")
         print(f"F1-score (macro): {f1:.4f}")
