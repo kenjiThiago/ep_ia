@@ -197,40 +197,53 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
 # Treinamento com K-Fold Cross Validation
 def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plotar=True):
     tamanho_treinamento = x_train.shape[0]
-    fold_size = tamanho_treinamento // numero_folds
+    indices = np.arange(tamanho_treinamento)
+    np.random.shuffle(indices)
 
-    melhor_acuracia = 0
+    x_train = x_train[indices]
+    y_train = y_train[indices]
+
+    folds_x = np.array_split(x_train, numero_folds)
+    folds_y = np.array_split(y_train, numero_folds)
+
+    acertos_totais = 0
+    total_testes = 0
     acuracias = []
 
+    melhor_acuracia = 0
     melhor_pesos_camada_escondida = None
     melhor_pesos_camada_saida = None
     fold = 0
     for f in range(numero_folds):
-        print(f"Fold {f}")
+        print(f"=======Fold {f+1}/{numero_folds}=======")
 
-        inicio = f * fold_size
-        fim = inicio + fold_size if f < numero_folds - 1 else tamanho_treinamento
+        x_fold_valid = folds_x[f]
+        y_fold_valid = folds_y[f]
 
-        x_fold_valid = x_train[inicio:fim]
-        y_fold_valid = y_train[inicio:fim]
-
-        x_fold_train = np.concatenate((x_train[:inicio], x_train[fim:]), axis=0)
-        y_fold_train = np.concatenate((y_train[:inicio], y_train[fim:]), axis=0)
+        x_fold_train = np.concatenate([folds_x[j] for j in range(numero_folds) if j != f])
+        y_fold_train = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
 
         pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
-        acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
 
+        acuracia = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
+
+        acertos_totais += int(acuracia * x_fold_train.shape[0])
+        total_testes += x_fold_train.shape[0]
+
         if acuracia > melhor_acuracia:
             melhor_acuracia = acuracia
             melhor_pesos_camada_escondida = np.copy(pesos_camada_escondida)
             melhor_pesos_camada_saida = np.copy(pesos_camada_saida)
-            fold = f
+            fold = f + 1
+
+    media_acuracia = acertos_totais / total_testes
+    desvio_padrao = np.std(acuracias, ddof=1)
 
     print("\n=======Resultados k-fold=======")
     print(f"Fold com melhor acuracia: {fold}")
     print(f"Acurácias por fold:\n{acuracias}")
-    print(f"Média da acurácia: {np.mean(acuracias):.4f} | Desvio padrão: {np.std(acuracias, ddof=1):.4f}")
+    print(f"Média da acurácia: {media_acuracia} | Desvio padrão: {desvio_padrao}")
 
     return melhor_pesos_camada_escondida, melhor_pesos_camada_saida
 
