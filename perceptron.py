@@ -92,8 +92,8 @@ def treinar_epocas(
 
     # Inicializa os melhores pesos e a melhor época
     melhor_epoca = 0
-    melhores_pesos_camada_escondida = pesos_camada_escondida
-    melhores_pesos_camada_saida = pesos_camada_saida
+    melhores_pesos_camada_escondida = np.copy(pesos_camada_escondida)
+    melhores_pesos_camada_saida = np.copy(pesos_camada_saida)
 
     # Loop principal de treinamento
     for i in range(epocas):
@@ -125,15 +125,18 @@ def treinar_epocas(
             if erro_validacao_atual < menor_erro_validacao:
                 melhor_epoca = i
                 menor_erro_validacao = erro_validacao_atual
-                melhores_pesos_camada_escondida = pesos_camada_escondida
-                melhores_pesos_camada_saida = pesos_camada_saida
-        else:
-            # Se não há validação, os melhores pesos são os atuais
-            melhores_pesos_camada_escondida = pesos_camada_escondida
-            melhores_pesos_camada_saida = pesos_camada_saida
+                melhores_pesos_camada_escondida = np.copy(pesos_camada_escondida)
+                melhores_pesos_camada_saida = np.copy(pesos_camada_saida)
+
+
         # Critério de parada antecipada: se o erro for muito pequeno
         if erro_medio < 5e-3:
             break
+
+    # Se não há validação, os melhores pesos são os atuais
+    if x_valid is None:
+        melhores_pesos_camada_escondida = pesos_camada_escondida
+        melhores_pesos_camada_saida = pesos_camada_saida
 
     # Imprime o erro final de treino
     print(f"\nErro Quadrático Médio Final: {erros[-1]}")
