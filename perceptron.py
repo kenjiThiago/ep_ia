@@ -89,7 +89,7 @@ def backpropagation(
 
 # Treinamento por várias épocas, com cálculo do erro médio por época
 def treinar_epocas(
-        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
+        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
 ):
     # Lista para armazenar o erro quadrático médio (EQM) de cada época
     erros = []
@@ -111,7 +111,7 @@ def treinar_epocas(
         erro_total = 0
 
         # Itera por todas as amostras de treino
-        for x_i, y_i in zip(x_train, y_train):
+        for x_i, y_i in zip(x_treino, y_treino):
             saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
             pesos_camada_escondida, pesos_camada_saida, erro = backpropagation(
                 pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
@@ -121,13 +121,13 @@ def treinar_epocas(
             erro_total += erro
 
         # Calcula o erro médio da época atual e armazena
-        erro_medio = erro_total / x_train.shape[0]
+        erro_medio = erro_total / x_treino.shape[0]
         erros.append(erro_medio)
 
         # Validação, se fornecida
-        if x_valid is not None and y_valid is not None:
+        if x_validacao is not None and y_validacao is not None:
             # Calcula o erro quadrático médio no conjunto de validação
-            erro_validacao_atual = validacao_rede(x_valid, y_valid, pesos_camada_escondida, pesos_camada_saida)
+            erro_validacao_atual = validacao_rede(x_validacao, y_validacao, pesos_camada_escondida, pesos_camada_saida)
             erros_validacao.append(erro_validacao_atual)
 
             # Atualiza os melhores pesos se o erro de validação foi o menor até agora
@@ -146,7 +146,7 @@ def treinar_epocas(
     print(f"\nErro Quadrático Médio Final: {erros[-1]}")
 
     # Se houver validação, exibe a melhor época e o menor erro de validação
-    if x_valid is not None and y_valid is not None:
+    if x_validacao is not None and y_validacao is not None:
         print(f"\nMelhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
 
     return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
@@ -211,7 +211,7 @@ def plotar_matriz_confusao(matriz):
     plt.show()
 
 # Treinamento padrão (com ou sem validação)
-def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plot=True):
+def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_validacao=None, y_validacao=None, plot=True):
     numero_pesos_escondida = x_treino.shape[1]
     neuronios_camada_saida = y_treino.shape[1]
 
@@ -221,7 +221,7 @@ def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocul
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
     pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
-        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
+        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
     )
 
     # Se habilitado, plota o gráfico do erro por época
