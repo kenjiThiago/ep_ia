@@ -133,7 +133,7 @@ def treinar_epocas(
 
             # Atualiza os melhores pesos se o eqm de validação foi o menor até agora
             if eqm_validacao_atual < menor_eqm:
-                epoca_parada_antecipada = i
+                epoca_parada_antecipada = i + 1
                 menor_eqm = eqm_validacao_atual
                 pesos_camada_escondida_final = np.copy(pesos_camada_escondida)
                 pesos_camada_saida_final = np.copy(pesos_camada_saida)
@@ -150,7 +150,7 @@ def treinar_epocas(
     if x_validacao is not None and y_validacao is not None:
         print(f"\nÉpoca da parada antecipada: {epoca_parada_antecipada} | Erro de validação: {menor_eqm:.6f}")
 
-    return pesos_camada_escondida_final, pesos_camada_saida_final, eqms_treino, eqms_validacao
+    return pesos_camada_escondida_final, pesos_camada_saida_final, eqms_treino, eqms_validacao, epoca_parada_antecipada
 
 
 def f1_macro(matriz):
@@ -174,10 +174,11 @@ def f1_macro(matriz):
     return np.mean(f_score)
 
 # Gera gráfico do erro durante o treinamento
-def plotar_erro(eqm_treino, eqm_validacao):
+def plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada):
     plt.plot(eqm_treino, label="Erro")
     if len(eqm_validacao) != 0:
         plt.plot(eqm_validacao, label="Erro Validação")
+        plt.axvline(epoca_parada_antecipada, color='black', linestyle='--', label="Época parada antecipada")
     plt.xlabel("Épocas")
     plt.ylabel("Erro Quadrático Médio (MSE)")
     plt.legend()
@@ -221,12 +222,12 @@ def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocul
 
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
-    pesos_camada_escondida, pesos_camada_saida, eqm_treino, eqm_validacao = treinar_epocas(
+    pesos_camada_escondida, pesos_camada_saida, eqm_treino, eqm_validacao, epoca_parada_antecipada = treinar_epocas(
         x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
     )
 
     # Se habilitado, plota o gráfico do erro por época
-    if plot: plotar_erro(eqm_treino, eqm_validacao)
+    if plot: plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada)
 
     return pesos_camada_escondida, pesos_camada_saida
 
@@ -275,9 +276,9 @@ def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronio
     for f in range(numero_folds):
         print(f"=======Fold {f+1}/{numero_folds}=======")
 
-        # Separa os dados de validação (o fold atual)
-        x_fold_validacao = folds_x[f]
-        y_fold_validacao = folds_y[f]
+        # Separa os dados de teste (o fold atual)
+        x_fold_teste = folds_x[f]
+        y_fold_teste = folds_y[f]
 
         # Concatena os demais folds para formar o conjunto de treino
         x_fold_treino = np.concatenate([folds_x[j] for j in range(numero_folds) if j != f])
@@ -287,7 +288,7 @@ def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronio
         pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_treino, y_fold_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot)
 
         # Avalia a rede no fold de validação
-        acuracia, reais, previstos = testar_rede(x_fold_validacao, y_fold_validacao, pesos_camada_escondida, pesos_camada_saida, False)
+        acuracia, reais, previstos = testar_rede(x_fold_teste, y_fold_teste, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
 
         # Acumula os rótulos reais e as predições para métricas globais
