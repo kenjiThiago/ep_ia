@@ -5,48 +5,13 @@ import argparse
 
 # Faz o parse dos argumentos
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Treinamento de rede neural para reconhecimento de letras."
-    )
-
-    parser.add_argument(
-        "-m",
-        "--modo",
-        choices=["simples", "validacao", "kfold"],
-        required=True,
-        help="Modo de treinamento",
-    )
-    parser.add_argument(
-        "-n",
-        "--neuronios",
-        type=int,
-        required=True,
-        help="Número de neurônios na camada oculta",
-    )
-    parser.add_argument(
-        "-t", "--taxa", type=float, required=True, help="Taxa de aprendizado"
-    )
-    parser.add_argument(
-        "-e",
-        "--epocas",
-        type=int,
-        required=True,
-        help="Número de épocas de treinamento",
-    )
-    parser.add_argument(
-        "-f",
-        "--folds",
-        type=int,
-        default=13,
-        help="Número de folds (apenas se modo for kfold).",
-    )
-    parser.add_argument(
-        "-p",
-        "--plot",
-        choices=["True", "False"],
-        default="True",
-        help="Mostrar gráfico do erro quadrático médio",
-    )
+    parser = argparse.ArgumentParser(description="Treinamento de rede neural para reconhecimento de letras.")
+    parser.add_argument("-m", "--modo", choices=["simples", "validacao", "kfold"], required=True, help="Modo de treinamento")
+    parser.add_argument("-n", "--neuronios", type=int, required=True, help="Número de neurônios na camada oculta")
+    parser.add_argument("-t", "--taxa", type=float, required=True, help="Taxa de aprendizado")
+    parser.add_argument("-e", "--epocas", type=int, required=True, help="Número de épocas de treinamento")
+    parser.add_argument("-f", "--folds", type=int, default=13, help="Número de folds (apenas se modo for kfold).")
+    parser.add_argument("-p", "--plot", choices=["True", "False"], default="True", help="Mostrar gráfico do erro quadrático médio")
 
     args = parser.parse_args()
     return args
@@ -83,6 +48,10 @@ taxa_aprendizado = args.taxa
 epocas = args.epocas
 plot = args.plot == "True"
 
+# Separa os dados de teste (últimas 130 amostras)
+x_teste = entradas_brutas[(num_amostras - tamanho_treinamento) :]
+y_teste = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
+
 tamanho_validacao = int(0.18 * (num_amostras - tamanho_treinamento))
 
 if modo == "simples":
@@ -90,27 +59,24 @@ if modo == "simples":
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento(
         x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot
     )
+
+    # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
+    pc.testar_rede(x_teste, y_teste, pesos_camada_escondida, pesos_camada_saida)
 elif modo == "validacao":
     # 2. Treinamento com validação
     # Usa parte dos dados de treino como validação durante as épocas (e.g., últimas N amostras)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento_validacao(
         x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot
     )
+
+    # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
+    pc.testar_rede(x_teste, y_teste, pesos_camada_escondida, pesos_camada_saida)
 else:
     # Define o número de folds
     folds = args.folds
 
     # 3. Treinamento com K-Fold Cross Validation
     # Divide o conjunto de treino em K partes, treina com K-1 e valida com 1, repetindo K vezes
-    # Retorna os pesos que obtiveram melhor desempenho médio na validação
     pc.treinamento_folds(
         x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, folds, plot
     )
-    exit(0)
-
-# Separa os dados de teste (últimas 130 amostras)
-x_teste = entradas_brutas[(num_amostras - tamanho_treinamento) :]
-y_teste = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
-
-# Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
-pc.testar_rede(x_teste, y_teste, pesos_camada_escondida, pesos_camada_saida)

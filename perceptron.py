@@ -162,7 +162,7 @@ def f1_macro(matriz):
         FP = np.sum(matriz[:, i]) - VP  # Falso Positivo
         FN = np.sum(matriz[i, :]) - VP  # Falso Negativo
 
-        if VP + FP == 0 or VP + FN == 0:
+        if VP / (VP + FP) == 0 or VP / (VP + FN) == 0:
             f_score.append(0.0)  # evita divisão por zero
             continue
 
