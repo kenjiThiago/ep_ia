@@ -143,6 +143,26 @@ def treinar_epocas(
     return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
 
 
+def f1_macro(matriz):
+    num_classes = matriz.shape[0]
+    f_score = []
+
+    for i in range(num_classes):
+        VP = matriz[i, i]               # Verdadeiro Positivo
+        FP = np.sum(matriz[:, i]) - VP  # Falso Positivo
+        FN = np.sum(matriz[i, :]) - VP  # Falso Negativo
+
+        if VP + FP == 0 or VP + FN == 0:
+            f_score.append(0.0)  # evita divisão por zero
+            continue
+
+        precisao = VP / (VP + FP)
+        revocacao = VP / (VP + FN)
+        f1 = 2 * precisao * revocacao / (precisao + revocacao)
+        f_score.append(f1)
+
+    return np.mean(f_score)
+
 # Gera gráfico do erro durante o treinamento
 def plotar_erro(erros, erros_validacao):
     plt.plot(erros, label="Erro")
@@ -155,7 +175,7 @@ def plotar_erro(erros, erros_validacao):
     plt.tight_layout()
     plt.show()
 
-def plotar_confusion_matrix(matriz):
+def plotar_matriz_confusao(matriz):
     labels = [chr(i) for i in range(ord('A'), ord('Z') + 1)]  # Letras A-Z
 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -278,11 +298,11 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     print(f"Média da acurácia: {media_acuracia} ({acertos_totais}/{total_testes}) | Desvio padrão: {desvio_padrao}")
 
     # F1-score global macro (avalia equilíbrio entre precisão e revocação)
-    f1 = f1_score(todos_reais, todos_previstos, average="macro")
+    f1 = f1_macro(matriz)
     print(f"F1-score (macro): {f1:.4f}")
 
     # Matriz de confusão global
-    plotar_confusion_matrix(matriz)
+    plotar_matriz_confusao(matriz)
 
 
 # Calcula erro quadrático médio em um conjunto de validação
@@ -326,9 +346,9 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         print("\n=======Resultados Teste=======")
         print(f"Acurácia final no conjunto de teste: {acuracia} ({acertos}/{total})")
 
-        f1 = f1_score(verdadeiras, previstas, average="macro")
+        f1 = f1_macro(matriz)
         print(f"F1-score (macro): {f1:.4f}")
 
-        plotar_confusion_matrix(matriz)
+        plotar_matriz_confusao(matriz)
 
     return acuracia, verdadeiras, previstas
