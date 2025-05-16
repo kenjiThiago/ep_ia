@@ -236,9 +236,6 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     folds_x = np.array_split(x_train, numero_folds)
     folds_y = np.array_split(y_train, numero_folds)
 
-    # Variáveis para computar estatísticas globais
-    acertos_totais = 0          # Soma de acertos de todos os folds
-    total_testes = 0            # Total de amostras testadas
     acuracias = []              # Lista com acurácia de cada fold
 
     todos_reais = []            # Lista com todas as classes reais de todos os folds
@@ -267,11 +264,11 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         todos_reais += reais
         todos_previstos += previstos
 
-        # Acumula estatísticas de acerto
-        acertos_totais += int(acuracia * x_fold_valid.shape[0])
-        total_testes += x_fold_valid.shape[0]
-
     # Calcula estatísticas finais após todos os folds
+    matriz = confusion_matrix(todos_reais, todos_previstos)
+    acertos_totais = np.trace(matriz)           # Soma de acertos de todos os folds
+    total_testes = np.sum(matriz)               # Total de amostras testadas
+
     media_acuracia = acertos_totais / total_testes
     desvio_padrao = np.std(acuracias, ddof=1)
 
@@ -285,7 +282,6 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
     print(f"F1-score (macro): {f1:.4f}")
 
     # Matriz de confusão global
-    matriz = confusion_matrix(todos_reais, todos_previstos)
     plotar_confusion_matrix(matriz)
 
 
@@ -306,8 +302,6 @@ def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camad
 
 # Testa a rede comparando a classe prevista com a esperada
 def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, print_resultado=True):
-    acertos = 0
-    total = entradas.shape[0]
     verdadeiras = []
     previstas = []
 
@@ -322,10 +316,12 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         verdadeiras.append(classe_real)
         previstas.append(classe_prevista)
 
-        if classe_prevista == classe_real:
-            acertos += 1
+    # Calcula a matriz de confusão
+    matriz = confusion_matrix(verdadeiras, previstas)
+    acertos = np.trace(matriz)      # Calcula os acertos somando os valores da diagonal principal
+    total = np.sum(matriz)
+    acuracia = float(acertos / total)
 
-    acuracia = acertos / total
     if print_resultado:
         print("\n=======Resultados Teste=======")
         print(f"Acurácia final no conjunto de teste: {acuracia} ({acertos}/{total})")
@@ -333,7 +329,6 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         f1 = f1_score(verdadeiras, previstas, average="macro")
         print(f"F1-score (macro): {f1:.4f}")
 
-        matriz = confusion_matrix(verdadeiras, previstas)
         plotar_confusion_matrix(matriz)
 
     return acuracia, verdadeiras, previstas
