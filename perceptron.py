@@ -34,9 +34,9 @@ def adicionar_bias(matriz_entradas):
 # Inicializa pesos aleatórios com valores pequenos
 def inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos):
     # pesos da camada escondida: (n_ocultos x n_entradas)
-    pesos_camada_escondida = np.random.uniform(-0.01, 0.01, (num_neuronios_ocultos, numero_pesos_escondida))
+    pesos_camada_escondida = np.random.uniform(-0.1, 0.1, (num_neuronios_ocultos, numero_pesos_escondida))
     # pesos da camada de saída: (n_saídas x (n_ocultos + 1)) → +1 por causa do bias
-    pesos_camada_saida = np.random.uniform(-0.01, 0.01, (neuronios_camada_saida, num_neuronios_ocultos + 1))
+    pesos_camada_saida = np.random.uniform(-0.1, 0.1, (neuronios_camada_saida, num_neuronios_ocultos + 1))
     return pesos_camada_escondida, pesos_camada_saida
 
 
@@ -255,6 +255,7 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
 def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plot=True):
     tamanho_treinamento = x_treino.shape[0]
 
+    np.random.seed(42)
     # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
     indices = np.arange(tamanho_treinamento)
     np.random.shuffle(indices)
