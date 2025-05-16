@@ -331,8 +331,8 @@ def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camad
 
 # Testa a rede comparando a classe prevista com a esperada
 def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, print_resultado=True):
-    verdadeiras = []
-    previstas = []
+    reais = []
+    previstos = []
 
     for x_i, y_i in zip(entradas, saida_desejada):
         _, predicao_final = forward_pass(
@@ -342,11 +342,11 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
         classe_real = np.argmax(y_i)
         classe_prevista = np.argmax(predicao_final)
 
-        verdadeiras.append(classe_real)
-        previstas.append(classe_prevista)
+        reais.append(classe_real)
+        previstos.append(classe_prevista)
 
     # Calcula a matriz de confusão
-    matriz = confusion_matrix(verdadeiras, previstas)
+    matriz = confusion_matrix(reais, previstos)
     acertos = np.trace(matriz)      # Calcula os acertos somando os valores da diagonal principal
     total = np.sum(matriz)
     acuracia = float(acertos / total)
@@ -360,4 +360,4 @@ def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_s
 
         plotar_matriz_confusao(matriz)
 
-    return acuracia, verdadeiras, previstas
+    return acuracia, reais, previstos
