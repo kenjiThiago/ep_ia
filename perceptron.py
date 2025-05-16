@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
 
 
 # Função de ativação sigmoide
@@ -176,24 +175,24 @@ def plotar_erro(erros, erros_validacao):
     plt.show()
 
 def plotar_matriz_confusao(matriz):
-    labels = [chr(i) for i in range(ord('A'), ord('Z') + 1)]  # Letras A-Z
+    legendas = [chr(i) for i in range(ord('A'), ord('Z') + 1)]  # Letras A-Z
 
     fig, ax = plt.subplots(figsize=(10, 8))
     cax = ax.matshow(matriz, cmap='Blues')
     plt.title("Matriz de Confusão", pad=20)
     fig.colorbar(cax)
 
-    ax.set_xticks(np.arange(len(labels)))
-    ax.set_yticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_yticklabels(labels)
+    ax.set_xticks(np.arange(len(legendas)))
+    ax.set_yticks(np.arange(len(legendas)))
+    ax.set_xticklabels(legendas)
+    ax.set_yticklabels(legendas)
 
     plt.xlabel("Previsto")
     plt.ylabel("Real")
 
     # Anota os valores dentro das células
-    for i in range(len(labels)):
-        for j in range(len(labels)):
+    for i in range(len(legendas)):
+        for j in range(len(legendas)):
             valor = matriz[i, j]
             cor = "white" if valor > matriz.max() / 2 else "black"
             ax.text(j, i, str(valor), ha='center', va='center', color=cor)
@@ -202,9 +201,9 @@ def plotar_matriz_confusao(matriz):
     plt.show()
 
 # Treinamento padrão (com ou sem validação)
-def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plot=True):
-    numero_pesos_escondida = x_train.shape[1]
-    neuronios_camada_saida = y_train.shape[1]
+def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plot=True):
+    numero_pesos_escondida = x_treino.shape[1]
+    neuronios_camada_saida = y_treino.shape[1]
 
     # Inicializa os pesos das camadas
     pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
@@ -212,7 +211,7 @@ def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_oculto
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
     pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
-        x_train, y_train, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
+        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_valid, y_valid
     )
 
     # Se habilitado, plota o gráfico do erro por época
@@ -228,33 +227,33 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
 
     # Separa os dados em treino e validação
     # Os últimos 'tamanho_validacao' exemplos são usados como validação
-    x_train = entradas_brutas[: (num_amostras - tamanho_validacao)]
-    y_train = saidas_desejadas[: (total_saidas - tamanho_validacao)]
+    x_treino = entradas_brutas[: (num_amostras - tamanho_validacao)]
+    y_treino = saidas_desejadas[: (total_saidas - tamanho_validacao)]
 
-    x_valid = entradas_brutas[(num_amostras - tamanho_validacao) :]
-    y_valid = saidas_desejadas[(total_saidas - tamanho_validacao) :]
+    x_validacao = entradas_brutas[(num_amostras - tamanho_validacao) :]
+    y_validacao = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
     # Treina a rede com os dados de treino e valida com os dados separados
-    pesos_camada_escondida, pesos_camada_saida = treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid, y_valid, plot)
+    pesos_camada_escondida, pesos_camada_saida = treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_validacao, y_validacao, plot)
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
 # Treinamento com K-Fold Cross Validation
-def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plot=True):
-    tamanho_treinamento = x_train.shape[0]
+def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plot=True):
+    tamanho_treinamento = x_treino.shape[0]
 
     # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
     indices = np.arange(tamanho_treinamento)
     np.random.shuffle(indices)
 
     # Aplica a permutação às entradas e saídas
-    x_train = x_train[indices]
-    y_train = y_train[indices]
+    x_treino = x_treino[indices]
+    y_treino = y_treino[indices]
 
     # Divide os dados embaralhados em 'numero_folds' partes iguais (ou quase iguais)
-    folds_x = np.array_split(x_train, numero_folds)
-    folds_y = np.array_split(y_train, numero_folds)
+    folds_x = np.array_split(x_treino, numero_folds)
+    folds_y = np.array_split(y_treino, numero_folds)
 
     acuracias = []              # Lista com acurácia de cada fold
 
@@ -266,18 +265,18 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         print(f"=======Fold {f+1}/{numero_folds}=======")
 
         # Separa os dados de validação (o fold atual)
-        x_fold_valid = folds_x[f]
-        y_fold_valid = folds_y[f]
+        x_fold_validacao = folds_x[f]
+        y_fold_validacao = folds_y[f]
 
         # Concatena os demais folds para formar o conjunto de treino
-        x_fold_train = np.concatenate([folds_x[j] for j in range(numero_folds) if j != f])
-        y_fold_train = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
+        x_fold_treino = np.concatenate([folds_x[j] for j in range(numero_folds) if j != f])
+        y_fold_treino = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
 
         # Treina a rede com os dados do fold atual
-        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot)
+        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_treino, y_fold_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot)
 
         # Avalia a rede no fold de validação
-        acuracia, reais, previstos = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)
+        acuracia, reais, previstos = testar_rede(x_fold_validacao, y_fold_validacao, pesos_camada_escondida, pesos_camada_saida, False)
         acuracias.append(acuracia)
 
         # Acumula os rótulos reais e as predições para métricas globais

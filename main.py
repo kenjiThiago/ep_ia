@@ -73,8 +73,8 @@ total_saidas = saidas_desejadas.shape[0]
 tamanho_treinamento = 130
 
 # Separa os dados de treinamento (tudo menos as últimas 130 amostras)
-x_train = entradas_brutas[: (num_amostras - tamanho_treinamento)]
-y_train = saidas_desejadas[: (total_saidas - tamanho_treinamento)]
+x_treino = entradas_brutas[: (num_amostras - tamanho_treinamento)]
+y_treino = saidas_desejadas[: (total_saidas - tamanho_treinamento)]
 
 # Define os parâmetros da rede
 modo = args.modo
@@ -88,13 +88,13 @@ tamanho_validacao = int(0.18 * (num_amostras - tamanho_treinamento))
 if modo == "simples":
     # 1. Treinamento simples com todos os dados de treino (sem validação)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento(
-        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot
+        x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot
     )
 elif modo == "validacao":
     # 2. Treinamento com validação
     # Usa parte dos dados de treino como validação durante as épocas (e.g., últimas N amostras)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento_validacao(
-        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot
+        x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot
     )
 else:
     # Define o número de folds
@@ -104,13 +104,13 @@ else:
     # Divide o conjunto de treino em K partes, treina com K-1 e valida com 1, repetindo K vezes
     # Retorna os pesos que obtiveram melhor desempenho médio na validação
     pc.treinamento_folds(
-        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, folds, plot
+        x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, folds, plot
     )
     exit(0)
 
 # Separa os dados de teste (últimas 130 amostras)
-x_test = entradas_brutas[(num_amostras - tamanho_treinamento) :]
-y_test = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
+x_teste = entradas_brutas[(num_amostras - tamanho_treinamento) :]
+y_teste = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
 
 # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
-pc.testar_rede(x_test, y_test, pesos_camada_escondida, pesos_camada_saida)
+pc.testar_rede(x_teste, y_teste, pesos_camada_escondida, pesos_camada_saida)
