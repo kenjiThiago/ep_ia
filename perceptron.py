@@ -3,6 +3,16 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 
+def tanh(entrada):
+
+    return np.tanh(entrada)
+
+
+def tanh_derivada(x):
+
+    return 1 - x**2
+
+
 # Função de ativação sigmoide
 def sigmoid(entrada):
     # σ(x) = 1 / (1 + e^(-x))
