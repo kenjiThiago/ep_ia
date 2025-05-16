@@ -88,7 +88,7 @@ def treinar_epocas(
     erros_validacao = []
 
     # Inicializa o menor erro de validação com um valor alto
-    menor_erro_validacao = 100
+    menor_erro_validacao = float("inf")
 
     # Inicializa os melhores pesos e a melhor época
     melhor_epoca = 0
@@ -129,8 +129,8 @@ def treinar_epocas(
                 melhores_pesos_camada_saida = np.copy(pesos_camada_saida)
 
 
-        # Critério de parada antecipada: se o erro for muito pequeno
-        if erro_medio < 5e-3:
+        # Critério de parada: se o erro for muito pequeno (caso não tenha conjunto de validação)
+        elif erro_medio < 5e-3:
             break
 
     # Imprime o erro final de treino
@@ -182,7 +182,7 @@ def plotar_confusion_matrix(matriz):
     plt.show()
 
 # Treinamento padrão (com ou sem validação)
-def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plotar=True):
+def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid=None, y_valid=None, plot=True):
     numero_pesos_escondida = x_train.shape[1]
     neuronios_camada_saida = y_train.shape[1]
 
@@ -196,13 +196,13 @@ def treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_oculto
     )
 
     # Se habilitado, plota o gráfico do erro por época
-    if plotar: plotar_erro(erros, erros_validacao)
+    if plot: plotar_erro(erros, erros_validacao)
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
 # Treinamento com validação
-def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plotar=True):
+def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot=True):
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
 
@@ -215,13 +215,13 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
     y_valid = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
     # Treina a rede com os dados de treino e valida com os dados separados
-    pesos_camada_escondida, pesos_camada_saida = treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid, y_valid, plotar)
+    pesos_camada_escondida, pesos_camada_saida = treinamento(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, x_valid, y_valid, plot)
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
 # Treinamento com K-Fold Cross Validation
-def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plotar=True):
+def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plot=True):
     tamanho_treinamento = x_train.shape[0]
 
     # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
@@ -257,7 +257,7 @@ def treinamento_folds(x_train, y_train, taxa_aprendizado, epocas, num_neuronios_
         y_fold_train = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
 
         # Treina a rede com os dados do fold atual
-        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plotar)
+        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_train, y_fold_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot)
 
         # Avalia a rede no fold de validação
         acuracia, reais, previstos = testar_rede(x_fold_valid, y_fold_valid, pesos_camada_escondida, pesos_camada_saida, False)

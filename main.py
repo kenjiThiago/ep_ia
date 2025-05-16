@@ -84,16 +84,18 @@ taxa_aprendizado = args.taxa
 epocas = args.epocas
 plot = args.plot == "True"
 
+tamanho_validacao = int(0.18 * (num_amostras - tamanho_treinamento))
+
 if modo == "simples":
     # 1. Treinamento simples com todos os dados de treino (sem validação)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento(
-        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plotar=plot
+        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot
     )
 elif modo == "validacao":
     # 2. Treinamento com validação
     # Usa parte dos dados de treino como validação durante as épocas (e.g., últimas N amostras)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento_validacao(
-        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, 130, plot
+        x_train, y_train, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot
     )
 else:
     # Define o número de folds
