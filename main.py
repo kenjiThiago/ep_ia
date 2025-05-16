@@ -64,7 +64,6 @@ entradas_brutas = pc.adicionar_bias(entradas_brutas)
 
 # Carrega os rótulos (saídas desejadas com 26 neurônios para A-Z)
 saidas_desejadas = np.load("dados/Y_classe.npy")
-saidas_desejadas = saidas_desejadas.reshape(-1, 26)
 
 # Obtém o número total de amostras e saídas
 num_amostras = entradas_brutas.shape[0]
