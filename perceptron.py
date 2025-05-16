@@ -82,74 +82,75 @@ def backpropagation(
     pesos_camada_escondida += taxa_aprendizado * np.outer(sigma_escondida, x_i)
 
     # Erro quadrático total da amostra
-    erro = np.sum(erro_saida**2)
+    erro_quadratico = np.sum(erro_saida**2)
 
-    return pesos_camada_escondida, pesos_camada_saida, erro
+    return pesos_camada_escondida, pesos_camada_saida, erro_quadratico
 
 
 # Treinamento por várias épocas, com cálculo do erro médio por época
 def treinar_epocas(
         x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
 ):
-    # Lista para armazenar o erro quadrático médio (EQM) de cada época
-    erros = []
-    # Lista para armazenar o erro de validação, caso fornecido
-    erros_validacao = []
-
-    # Inicializa o menor erro de validação com um valor alto
-    menor_erro_validacao = float("inf")
-
+    # Em caso de validacao
+    # Lista para armazenar o eqms de validação, caso fornecido
+    eqms_validacao = []
+    # Inicializa o menor eqm de validação com um valor alto
+    menor_eqm = float("inf")
     # Inicializa os melhores pesos e a melhor época
-    melhor_epoca = 0
-    melhores_pesos_camada_escondida = pesos_camada_escondida
-    melhores_pesos_camada_saida = pesos_camada_saida
+    epoca_parada_antecipada = 0
+
+    # Lista para armazenar o erro quadrático médio (EQM) de cada época
+    eqms_treino = []
+
+    pesos_camada_escondida_final = pesos_camada_escondida
+    pesos_camada_saida_final = pesos_camada_saida
 
     # Loop principal de treinamento
     for i in range(epocas):
         if (i + 1) % 50 == 0:
             print(f"{i + 1} épocas concluídas")
-        erro_total = 0
+        erro_quadratico_total = 0
 
         # Itera por todas as amostras de treino
         for x_i, y_i in zip(x_treino, y_treino):
             saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
-            pesos_camada_escondida, pesos_camada_saida, erro = backpropagation(
+            pesos_camada_escondida, pesos_camada_saida, erro_quadratico = backpropagation(
                 pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
             )
 
-            # Acumula o erro da amostra
-            erro_total += erro
+            # Acumula o erro quadrático da época
+            erro_quadratico_total += erro_quadratico
 
-        # Calcula o erro médio da época atual e armazena
-        erro_medio = erro_total / x_treino.shape[0]
-        erros.append(erro_medio)
+        # Calcula o eqm da época atual e armazena
+        eqm = erro_quadratico_total / x_treino.shape[0]
+        eqms_treino.append(eqm)
 
         # Validação, se fornecida
         if x_validacao is not None and y_validacao is not None:
             # Calcula o erro quadrático médio no conjunto de validação
-            erro_validacao_atual = validacao_rede(x_validacao, y_validacao, pesos_camada_escondida, pesos_camada_saida)
-            erros_validacao.append(erro_validacao_atual)
+            eqm_validacao_atual = validacao_rede(x_validacao, y_validacao, pesos_camada_escondida, pesos_camada_saida)
+            eqms_validacao.append(eqm_validacao_atual)
 
-            # Atualiza os melhores pesos se o erro de validação foi o menor até agora
-            if erro_validacao_atual < menor_erro_validacao:
-                melhor_epoca = i
-                menor_erro_validacao = erro_validacao_atual
-                melhores_pesos_camada_escondida = np.copy(pesos_camada_escondida)
-                melhores_pesos_camada_saida = np.copy(pesos_camada_saida)
+            # Atualiza os melhores pesos se o eqm de validação foi o menor até agora
+            if eqm_validacao_atual < menor_eqm:
+                epoca_parada_antecipada = i
+                menor_eqm = eqm_validacao_atual
+                pesos_camada_escondida_final = np.copy(pesos_camada_escondida)
+                pesos_camada_saida_final = np.copy(pesos_camada_saida)
 
 
         # Critério de parada: se o erro for muito pequeno (caso não tenha conjunto de validação)
-        elif erro_medio < 5e-3:
+        elif eqm < 5e-3:
             break
 
-    # Imprime o erro final de treino
-    print(f"\nErro Quadrático Médio Final: {erros[-1]}")
+    # Imprime o eqm final de treino
+    print(f"\nErro Quadrático Médio Final: {eqms_treino[-1]}")
 
-    # Se houver validação, exibe a melhor época e o menor erro de validação
+    # Se houver validação, exibe a melhor época e o menor eqm de validação
     if x_validacao is not None and y_validacao is not None:
-        print(f"\nMelhor época: {melhor_epoca} | Menor erro de validação: {menor_erro_validacao:.6f}")
+        print(f"\nÉpoca da parada antecipada: {epoca_parada_antecipada} | Erro de validação: {menor_eqm:.6f}")
 
-    return melhores_pesos_camada_escondida, melhores_pesos_camada_saida, erros, erros_validacao
+    return pesos_camada_escondida_final, pesos_camada_saida_final, eqms_treino, eqms_validacao
 
 
 def f1_macro(matriz):
@@ -173,10 +174,10 @@ def f1_macro(matriz):
     return np.mean(f_score)
 
 # Gera gráfico do erro durante o treinamento
-def plotar_erro(erros, erros_validacao):
-    plt.plot(erros, label="Erro")
-    if len(erros_validacao) != 0:
-        plt.plot(erros_validacao, label="Erro Validação")
+def plotar_erro(eqm_treino, eqm_validacao):
+    plt.plot(eqm_treino, label="Erro")
+    if len(eqm_validacao) != 0:
+        plt.plot(eqm_validacao, label="Erro Validação")
     plt.xlabel("Épocas")
     plt.ylabel("Erro Quadrático Médio (MSE)")
     plt.legend()
@@ -220,12 +221,12 @@ def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocul
 
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
-    pesos_camada_escondida, pesos_camada_saida, erros, erros_validacao = treinar_epocas(
+    pesos_camada_escondida, pesos_camada_saida, eqm_treino, eqm_validacao = treinar_epocas(
         x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
     )
 
     # Se habilitado, plota o gráfico do erro por época
-    if plot: plotar_erro(erros, erros_validacao)
+    if plot: plotar_erro(eqm_treino, eqm_validacao)
 
     return pesos_camada_escondida, pesos_camada_saida
 
@@ -318,15 +319,16 @@ def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronio
 def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida):
     total = entradas.shape[0]
 
-    erro_total = 0
+    erro_quadratico_total = 0
     for x_i, y_i in zip(entradas, saida_desejada):
         _, predicao_final = forward_pass(
             pesos_camada_escondida, pesos_camada_saida, x_i
         )
         erro_saida = y_i - predicao_final
-        erro_total += np.sum(erro_saida**2)
+        erro_quadratico_total += np.sum(erro_saida**2)
 
-    return erro_total / total
+    eqm = erro_quadratico_total / total
+    return eqm
 
 
 # Testa a rede comparando a classe prevista com a esperada
