@@ -221,8 +221,20 @@ def plotar_matriz_confusao(matriz):
     plt.tight_layout()
     plt.show()
 
+def exibir_parametros(hparams, tipo="simples"):
+    print(f"=== Iniciando treinamento ({tipo}) ===")
+    print(f"  • Taxa de aprendizado: {hparams['taxa_aprendizado']}")
+    print(f"  • Épocas: {hparams['epocas']}")
+    print(f"  • Neurônios ocultos: {hparams['num_neuronios_ocultos']}")
+    print(f"  • Função de ativação: {hparams['func_ativacao'].__name__}")
+    if tipo == "k-fold": print(f"  • Folds: {hparams["folds"]}")
+    print("=====================================\n")
+
 # Treinamento padrão (com ou sem validação)
-def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None):
+def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None, tipo=None):
+    if tipo:
+        exibir_parametros(hparams, tipo)
+
     plot = hparams["plot"]
 
     numero_pesos_escondida = x_treino.shape[1]
@@ -257,13 +269,14 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, hparams, tamanho_va
     y_validacao = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
     # Treina a rede com os dados de treino e valida com os dados separados
-    pesos_camada_escondida, pesos_camada_saida = treinamento(x_treino, y_treino, hparams, x_validacao, y_validacao)
+    pesos_camada_escondida, pesos_camada_saida = treinamento(x_treino, y_treino, hparams, x_validacao, y_validacao, tipo="validação")
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
 # Treinamento com K-Fold Cross Validation
 def treinamento_folds(x_treino, y_treino, hparams):
+    exibir_parametros(hparams, "k-fold")
     numero_folds = hparams["folds"]
 
     tamanho_treinamento = x_treino.shape[0]

@@ -75,7 +75,7 @@ y_teste = saidas_desejadas[tamanho_treino:]
 if modo == "simples":
     # 1. Treinamento simples com todos os dados de treino (sem validação)
     pesos_camada_escondida, pesos_camada_saida = pc.treinamento(
-        x_treino, y_treino, hparams
+        x_treino, y_treino, hparams, tipo="simples"
     )
 
     # Testa a rede com os pesos finais no conjunto de teste e imprime a acurácia
