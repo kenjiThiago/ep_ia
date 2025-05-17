@@ -183,7 +183,7 @@ def f1_macro(matriz):
     return np.mean(f_score)
 
 # Gera gráfico do erro durante o treinamento
-def plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada):
+def plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada, hparams):
     plt.plot(eqm_treino, label="Erro")
     if len(eqm_validacao) != 0:
         plt.plot(eqm_validacao, label="Erro Validação")
@@ -191,6 +191,7 @@ def plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada):
     plt.xlabel("Épocas")
     plt.ylabel("Erro Quadrático Médio (MSE)")
     plt.legend()
+    plt.title(f"Treinamento — TA: {hparams['taxa_aprendizado']} | Épocas: {hparams['epocas']} | Ocultos: {hparams['num_neuronios_ocultos']} | Ativação: {hparams['func_ativacao'].__name__}")
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -250,7 +251,7 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
     )
 
     # Se habilitado, plota o gráfico do erro por época
-    if plot: plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada)
+    if plot: plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada, hparams)
 
     return pesos_camada_escondida, pesos_camada_saida
 
