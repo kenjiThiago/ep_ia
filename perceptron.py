@@ -171,12 +171,17 @@ def f1_macro(matriz):
         FP = np.sum(matriz[:, i]) - VP  # Falso Positivo
         FN = np.sum(matriz[i, :]) - VP  # Falso Negativo
 
-        if VP / (VP + FP) == 0 or VP / (VP + FN) == 0:
+        if (VP + FP) == 0 or (VP + FN) == 0:
             f_score.append(0.0)  # evita divisão por zero
             continue
 
         precisao = VP / (VP + FP)
         revocacao = VP / (VP + FN)
+
+        if (precisao + revocacao) == 0:
+            f_score.append(0.0)
+            continue
+
         f1 = 2 * precisao * revocacao / (precisao + revocacao)
         f_score.append(f1)
 
