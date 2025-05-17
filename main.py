@@ -1,15 +1,18 @@
 import numpy as np
 import perceptron as pc
 import argparse
+import os
 
 
 # Faz o parse dos argumentos
 def parse_args():
     parser = argparse.ArgumentParser(description="Treinamento de rede neural para reconhecimento de letras.")
+    parser.add_argument("-x", "--entrada", type=str, required=True, help="Caminho para o arquivo .npy com as entradas (X)")
+    parser.add_argument("-y", "--saida", type=str, required=True, help="Caminho para o arquivo .npy com as saídas (Y)")
     parser.add_argument("-m", "--modo", choices=["simples", "validacao", "kfold"], default="simples", help="Modo de treinamento")
-    parser.add_argument("-n", "--neuronios", type=int, required=True, help="Número de neurônios na camada oculta")
-    parser.add_argument("-t", "--taxa", type=float, required=True, help="Taxa de aprendizado")
-    parser.add_argument("-e", "--epocas", type=int, required=True, help="Número de épocas de treinamento")
+    parser.add_argument("-n", "--neuronios", type=int, default=60, help="Número de neurônios na camada oculta")
+    parser.add_argument("-t", "--taxa", type=float, default=0.1, help="Taxa de aprendizado")
+    parser.add_argument("-e", "--epocas", type=int, default=500, help="Número de épocas de treinamento")
     parser.add_argument("-f", "--folds", type=int, default=10, help="Número de folds (apenas se modo for kfold).")
     parser.add_argument("-p", "--plot", choices=["True", "False"], default="True", help="Mostrar gráfico do erro quadrático médio")
     parser.add_argument("-a", "--ativacao", choices=["sigmoide", "tanh"], default="sigmoide", help="Função de ativação usada na rede neural")
@@ -21,14 +24,21 @@ def parse_args():
 # Recebe os argumentos da linha de comando
 args = parse_args()
 
+# Verifica se os arquivos existem
+if not os.path.exists(args.entrada):
+    raise FileNotFoundError(f"Arquivo de entrada não encontrado: {args.entrada}")
+
+if not os.path.exists(args.saida):
+    raise FileNotFoundError(f"Arquivo de saída não encontrado: {args.saida}")
+
 # Carrega os dados de entrada (features) e os ajusta para ter 120 colunas por amostra
-entradas_brutas = np.load("dados/X.npy")
+entradas_brutas = np.load(args.entrada)
 entradas_brutas = entradas_brutas.reshape(-1, 120)
 # Adiciona o termo de bias às entradas (geralmente um 1 no início de cada vetor de entrada)
 entradas_brutas = pc.adicionar_bias(entradas_brutas)
 
 # Carrega os rótulos (saídas desejadas com 26 neurônios para A-Z)
-saidas_desejadas = np.load("dados/Y_classe.npy")
+saidas_desejadas = np.load(args.saida)
 
 # Define quantas amostras serão usadas para teste (o restante será usado para treinamento)
 tamanho_teste = 130
