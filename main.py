@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument("-n", "--neuronios", type=int, required=True, help="Número de neurônios na camada oculta")
     parser.add_argument("-t", "--taxa", type=float, required=True, help="Taxa de aprendizado")
     parser.add_argument("-e", "--epocas", type=int, required=True, help="Número de épocas de treinamento")
-    parser.add_argument("-f", "--folds", type=int, default=13, help="Número de folds (apenas se modo for kfold).")
+    parser.add_argument("-f", "--folds", type=int, default=10, help="Número de folds (apenas se modo for kfold).")
     parser.add_argument("-p", "--plot", choices=["True", "False"], default="True", help="Mostrar gráfico do erro quadrático médio")
     parser.add_argument("-a", "--ativacao", choices=["sigmoide", "tanh"], default="sigmoide", help="Função de ativação usada na rede neural")
 
@@ -24,23 +24,22 @@ args = parse_args()
 # Carrega os dados de entrada (features) e os ajusta para ter 120 colunas por amostra
 entradas_brutas = np.load("dados/X.npy")
 entradas_brutas = entradas_brutas.reshape(-1, 120)
-
 # Adiciona o termo de bias às entradas (geralmente um 1 no início de cada vetor de entrada)
 entradas_brutas = pc.adicionar_bias(entradas_brutas)
 
 # Carrega os rótulos (saídas desejadas com 26 neurônios para A-Z)
 saidas_desejadas = np.load("dados/Y_classe.npy")
 
+# Define quantas amostras serão usadas para teste (o restante será usado para treinamento)
+tamanho_teste = 130
 # Obtém o número total de amostras e saídas
 num_amostras = entradas_brutas.shape[0]
-total_saidas = saidas_desejadas.shape[0]
 
-# Define quantas amostras serão usadas para teste (o restante será usado para treinamento)
-tamanho_treinamento = 130
+tamanho_treino = num_amostras - tamanho_teste
 
 # Separa os dados de treinamento (tudo menos as últimas 130 amostras)
-x_treino = entradas_brutas[: (num_amostras - tamanho_treinamento)]
-y_treino = saidas_desejadas[: (total_saidas - tamanho_treinamento)]
+x_treino = entradas_brutas[:tamanho_treino]
+y_treino = saidas_desejadas[:tamanho_treino]
 
 # Define os parâmetros da rede
 hparams = {
@@ -54,13 +53,14 @@ hparams = {
     "func_derivada": pc.FUNCOES_ATIVACAO[args.ativacao][1],
 }
 
-# Separa os dados de teste (últimas 130 amostras)
-x_teste = entradas_brutas[(num_amostras - tamanho_treinamento) :]
-y_teste = saidas_desejadas[(total_saidas - tamanho_treinamento) :]
-
-tamanho_validacao = int(0.18 * (num_amostras - tamanho_treinamento))
+# Usa 18% dos dados de treinamento para a validação
+tamanho_validacao = int(0.18 * (tamanho_treino))
 
 modo = hparams["modo"]
+
+# Separa os dados de teste (últimas 130 amostras)
+x_teste = entradas_brutas[tamanho_treino:]
+y_teste = saidas_desejadas[tamanho_treino:]
 
 if modo == "simples":
     # 1. Treinamento simples com todos os dados de treino (sem validação)
