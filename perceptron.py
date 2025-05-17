@@ -14,16 +14,20 @@ def tanh_derivada(x):
 
 
 # Função de ativação sigmoide
-def sigmoid(entrada):
+def sigmoide(entrada):
     # σ(x) = 1 / (1 + e^(-x))
     return 1 / (1 + np.exp(-entrada))
 
 
 # Derivada da sigmoide (usada no backpropagation)
-def sigmoid_derivada(x):
+def sigmoide_derivada(x):
     # σ'(x) = σ(x) * (1 - σ(x))
     return x * (1 - x)
 
+FUNCOES_ATIVACAO = {
+    "sigmoide": (sigmoide, sigmoide_derivada),
+    "tanh": (tanh, tanh_derivada),
+}
 
 # Adiciona coluna de bias (1s) ao início da matriz de entradas
 def adicionar_bias(matriz_entradas):
@@ -41,32 +45,35 @@ def inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_o
 
 
 # Propagação direta (forward pass)
-def forward_pass(pesos_camada_escondida, pesos_camada_saida, entrada):
+def forward_pass(pesos_camada_escondida, pesos_camada_saida, entrada, func_ativacao):
     # Ativações da camada oculta (sem bias)
     entradas_camada_escondida = np.dot(pesos_camada_escondida, entrada)
-    saida_camada_escondida = sigmoid(entradas_camada_escondida)
+    saida_camada_escondida = func_ativacao(entradas_camada_escondida)
 
     # Adiciona o bias (1) à saída da camada oculta
     saida_camada_escondida = np.insert(saida_camada_escondida, 0, 1)
 
     # Ativação da camada de saída
     entradas_camada_saida = np.dot(pesos_camada_saida, saida_camada_escondida)
-    predicao_final = sigmoid(entradas_camada_saida)
+    predicao_final = func_ativacao(entradas_camada_saida)
 
     return saida_camada_escondida, predicao_final
 
 
 # Backpropagation: atualiza os pesos com base no erro
 def backpropagation(
-    pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
+    pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, hparams,
 ):
+    func_derivada = hparams["func_derivada"]
+    taxa_aprendizado = hparams["taxa_aprendizado"]
+
     # Cálculo do erro da camada de saída:
     # erro_saida = y - y_predito
     erro_saida = y_i - predicao_final
 
     # Gradiente da camada de saída:
     # sigma_saida = erro_saida * σ'(y_hat)
-    sigma_saida = erro_saida * sigmoid_derivada(predicao_final)
+    sigma_saida = erro_saida * func_derivada(predicao_final)
 
     # Cálculo da influência dos erros da saída na camada oculta:
     # soma_escondida = W_saida.T * sigma_saida  (sem incluir o bias)
@@ -74,7 +81,7 @@ def backpropagation(
 
     # Gradiente da camada oculta:
     # sigma_escondida = soma_escondida * σ'(ativação_oculta)
-    sigma_escondida = soma_escondida * sigmoid_derivada(saida_camada_escondida[1:])
+    sigma_escondida = soma_escondida * func_derivada(saida_camada_escondida[1:])
 
     # Atualização dos pesos com gradiente descendente:
     # W += taxa * sigma * entrada_transposta
@@ -89,8 +96,10 @@ def backpropagation(
 
 # Treinamento por várias épocas, com cálculo do erro médio por época
 def treinar_epocas(
-        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
+        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, hparams, x_validacao, y_validacao
 ):
+    epocas = hparams["epocas"]
+
     # Em caso de validacao
     # Lista para armazenar o eqms de validação, caso fornecido
     eqms_validacao = []
@@ -113,9 +122,9 @@ def treinar_epocas(
 
         # Itera por todas as amostras de treino
         for x_i, y_i in zip(x_treino, y_treino):
-            saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i)
+            saida_camada_escondida, predicao_final = forward_pass(pesos_camada_escondida, pesos_camada_saida, x_i, hparams["func_ativacao"])
             pesos_camada_escondida, pesos_camada_saida, erro_quadratico = backpropagation(
-                pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, taxa_aprendizado,
+                pesos_camada_escondida, pesos_camada_saida, x_i, y_i, saida_camada_escondida, predicao_final, hparams
             )
 
             # Acumula o erro quadrático da época
@@ -128,7 +137,7 @@ def treinar_epocas(
         # Validação, se fornecida
         if x_validacao is not None and y_validacao is not None:
             # Calcula o erro quadrático médio no conjunto de validação
-            eqm_validacao_atual = validacao_rede(x_validacao, y_validacao, pesos_camada_escondida, pesos_camada_saida)
+            eqm_validacao_atual = validacao_rede(x_validacao, y_validacao, pesos_camada_escondida, pesos_camada_saida, hparams["func_ativacao"])
             eqms_validacao.append(eqm_validacao_atual)
 
             # Atualiza os melhores pesos se o eqm de validação foi o menor até agora
@@ -213,17 +222,19 @@ def plotar_matriz_confusao(matriz):
     plt.show()
 
 # Treinamento padrão (com ou sem validação)
-def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_validacao=None, y_validacao=None, plot=True):
+def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None):
+    plot = hparams["plot"]
+
     numero_pesos_escondida = x_treino.shape[1]
     neuronios_camada_saida = y_treino.shape[1]
 
     # Inicializa os pesos das camadas
-    pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos)
+    pesos_camada_escondida, pesos_camada_saida = inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, hparams["num_neuronios_ocultos"])
 
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
     pesos_camada_escondida, pesos_camada_saida, eqm_treino, eqm_validacao, epoca_parada_antecipada = treinar_epocas(
-        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, taxa_aprendizado, epocas, x_validacao, y_validacao
+        x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, hparams, x_validacao, y_validacao
     )
 
     # Se habilitado, plota o gráfico do erro por época
@@ -233,7 +244,7 @@ def treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocul
 
 
 # Treinamento com validação
-def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, epocas, num_neuronios_ocultos, tamanho_validacao, plot=True):
+def treinamento_validacao(entradas_brutas, saidas_desejadas, hparams, tamanho_validacao):
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
 
@@ -246,13 +257,15 @@ def treinamento_validacao(entradas_brutas, saidas_desejadas, taxa_aprendizado, e
     y_validacao = saidas_desejadas[(total_saidas - tamanho_validacao) :]
 
     # Treina a rede com os dados de treino e valida com os dados separados
-    pesos_camada_escondida, pesos_camada_saida = treinamento(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, x_validacao, y_validacao, plot)
+    pesos_camada_escondida, pesos_camada_saida = treinamento(x_treino, y_treino, hparams, x_validacao, y_validacao)
 
     return pesos_camada_escondida, pesos_camada_saida
 
 
 # Treinamento com K-Fold Cross Validation
-def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, numero_folds, plot=True):
+def treinamento_folds(x_treino, y_treino, hparams):
+    numero_folds = hparams["folds"]
+
     tamanho_treinamento = x_treino.shape[0]
 
     np.random.seed(42)
@@ -286,10 +299,10 @@ def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronio
         y_fold_treino = np.concatenate([folds_y[j] for j in range(numero_folds) if j != f])
 
         # Treina a rede com os dados do fold atual
-        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_treino, y_fold_treino, taxa_aprendizado, epocas, num_neuronios_ocultos, plot=plot)
+        pesos_camada_escondida, pesos_camada_saida = treinamento(x_fold_treino, y_fold_treino, hparams)
 
         # Avalia a rede no fold de validação
-        acuracia, reais, previstos = testar_rede(x_fold_teste, y_fold_teste, pesos_camada_escondida, pesos_camada_saida, False)
+        acuracia, reais, previstos = testar_rede(x_fold_teste, y_fold_teste, pesos_camada_escondida, pesos_camada_saida, hparams["func_ativacao"], False)
         acuracias.append(acuracia)
 
         # Acumula os rótulos reais e as predições para métricas globais
@@ -318,13 +331,13 @@ def treinamento_folds(x_treino, y_treino, taxa_aprendizado, epocas, num_neuronio
 
 
 # Calcula erro quadrático médio em um conjunto de validação
-def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida):
+def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, func_ativacao):
     total = entradas.shape[0]
 
     erro_quadratico_total = 0
     for x_i, y_i in zip(entradas, saida_desejada):
         _, predicao_final = forward_pass(
-            pesos_camada_escondida, pesos_camada_saida, x_i
+            pesos_camada_escondida, pesos_camada_saida, x_i, func_ativacao
         )
         erro_saida = y_i - predicao_final
         erro_quadratico_total += np.sum(erro_saida**2)
@@ -334,13 +347,13 @@ def validacao_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camad
 
 
 # Testa a rede comparando a classe prevista com a esperada
-def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, print_resultado=True):
+def testar_rede(entradas, saida_desejada, pesos_camada_escondida, pesos_camada_saida, func_ativacao, print_resultado=True):
     reais = []
     previstos = []
 
     for x_i, y_i in zip(entradas, saida_desejada):
         _, predicao_final = forward_pass(
-            pesos_camada_escondida, pesos_camada_saida, x_i
+            pesos_camada_escondida, pesos_camada_saida, x_i, func_ativacao
         )
 
         classe_real = np.argmax(y_i)
