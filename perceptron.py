@@ -188,10 +188,10 @@ def f1_macro(matriz):
     return np.mean(f_score)
 
 # Gera gráfico do erro durante o treinamento
-def plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada, hparams):
-    plt.plot(eqm_treino, label="Erro")
-    if len(eqm_validacao) != 0:
-        plt.plot(eqm_validacao, label="Erro Validação")
+def plotar_erro(eqms_treino, eqms_validacao, epoca_parada_antecipada, hparams):
+    plt.plot(eqms_treino, label="Erro")
+    if len(eqms_validacao) != 0:
+        plt.plot(eqms_validacao, label="Erro Validação")
         plt.axvline(epoca_parada_antecipada, color='black', linestyle='--', label="Época parada antecipada")
     plt.xlabel("Épocas")
     plt.ylabel("Erro Quadrático Médio (MSE)")
@@ -251,12 +251,12 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
 
     # Executa o treinamento por múltiplas épocas
     # A função 'treinar_epocas' cuida do forward, backpropagation e validação (se houver)
-    pesos_camada_escondida, pesos_camada_saida, eqm_treino, eqm_validacao, epoca_parada_antecipada = treinar_epocas(
+    pesos_camada_escondida, pesos_camada_saida, eqms_treino, eqms_validacao, epoca_parada_antecipada = treinar_epocas(
         x_treino, y_treino, pesos_camada_escondida, pesos_camada_saida, hparams, x_validacao, y_validacao
     )
 
     # Se habilitado, plota o gráfico do erro por época
-    if plot: plotar_erro(eqm_treino, eqm_validacao, epoca_parada_antecipada, hparams)
+    if plot: plotar_erro(eqms_treino, eqms_validacao, epoca_parada_antecipada, hparams)
 
     return pesos_camada_escondida, pesos_camada_saida
 
