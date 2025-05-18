@@ -68,7 +68,8 @@ hparams = {
     "seed": args.seed,
 }
 
-np.random.seed(hparams["seed"])
+if hparams["seed"] is not None:
+    np.random.seed(hparams["seed"])
 
 # Usa 18% dos dados de treinamento para a validação
 tamanho_validacao = int(0.18 * (tamanho_treino))
