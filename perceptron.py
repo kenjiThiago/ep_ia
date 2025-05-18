@@ -157,7 +157,7 @@ def treinar_epocas(
 
     # Se houver validação, exibe a melhor época e o menor eqm de validação
     if x_validacao is not None and y_validacao is not None:
-        print(f"\nÉpoca da parada antecipada: {epoca_parada_antecipada} | Erro de validação: {menor_eqm:.6f}")
+        print(f"\nÉpoca da parada antecipada: {epoca_parada_antecipada} | EQM validação: {menor_eqm:.6f}")
 
     return pesos_camada_escondida_final, pesos_camada_saida_final, eqms_treino, eqms_validacao, epoca_parada_antecipada
 
