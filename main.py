@@ -17,6 +17,8 @@ def parse_args():
     parser.add_argument("-p", "--plot", choices=["True", "False"], default="True", help="Mostrar gráfico do erro quadrático médio")
     parser.add_argument("-a", "--ativacao", choices=["sigmoide", "tanh"], default="sigmoide", help="Função de ativação usada na rede neural")
     parser.add_argument("--embaralhar", action="store_true", help="Se definido, embaralha os dados antes do treinamento.")
+    parser.add_argument("--seed", type=int, default=None, help="Seed para controlar a aleatoriedade (embaralhamento, inicialização dos pesos etc.)")
+
 
     args = parser.parse_args()
     return args
@@ -62,8 +64,11 @@ hparams = {
     "folds": args.folds,
     "func_ativacao": pc.FUNCOES_ATIVACAO[args.ativacao][0],
     "func_derivada": pc.FUNCOES_ATIVACAO[args.ativacao][1],
-    "embaralhar": args.embaralhar
+    "embaralhar": args.embaralhar,
+    "seed": args.seed,
 }
+
+np.random.seed(hparams["seed"])
 
 # Usa 18% dos dados de treinamento para a validação
 tamanho_validacao = int(0.18 * (tamanho_treino))

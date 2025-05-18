@@ -34,10 +34,7 @@ def adicionar_bias(matriz_entradas):
     ones = np.ones((matriz_entradas.shape[0], 1))
     return np.hstack((ones, matriz_entradas))
 
-def embaralhar_dados(x, y, seed=None):
-    if seed is not None:
-        np.random.seed(seed)
-
+def embaralhar_dados(x, y):
     indices = np.random.permutation(x.shape[0])
     return x[indices], y[indices]
 
@@ -241,6 +238,7 @@ def exibir_parametros(hparams, tipo="simples"):
     print(f"  • Função de ativação: {hparams['func_ativacao'].__name__}")
     if tipo == "k-fold": print(f"  • Folds: {hparams['folds']}")
     print(f"  • Embaralhar os dados: {hparams['embaralhar']}")
+    if hparams["seed"] is not None: print(f"  • Seed: {hparams['seed']}")
     print("=====================================\n")
 
 # Treinamento padrão (com ou sem validação)
@@ -249,7 +247,7 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
         exibir_parametros(hparams, tipo)
 
     if hparams["embaralhar"] is True and tipo == "simples":
-        x_treino, y_treino = embaralhar_dados(x_treino, y_treino, 42)
+        x_treino, y_treino = embaralhar_dados(x_treino, y_treino)
 
     plot = hparams["plot"]
 
@@ -274,7 +272,7 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
 # Treinamento com validação
 def treinamento_validacao(entradas_brutas, saidas_desejadas, hparams, tamanho_validacao):
     if hparams["embaralhar"] is True:
-        entradas_brutas, saidas_desejadas = embaralhar_dados(entradas_brutas, saidas_desejadas, 42)
+        entradas_brutas, saidas_desejadas = embaralhar_dados(entradas_brutas, saidas_desejadas)
 
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
@@ -299,7 +297,7 @@ def treinamento_folds(x_treino, y_treino, hparams):
     numero_folds = hparams["folds"]
 
     if hparams["embaralhar"] is True:
-        x_treino, y_treino = embaralhar_dados(x_treino, y_treino, 42)
+        x_treino, y_treino = embaralhar_dados(x_treino, y_treino)
 
     # Divide os dados embaralhados em 'numero_folds' partes iguais (ou quase iguais)
     folds_x = np.array_split(x_treino, numero_folds)
