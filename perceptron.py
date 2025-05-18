@@ -233,7 +233,7 @@ def exibir_parametros(hparams, tipo="simples"):
     print(f"  • Épocas: {hparams['epocas']}")
     print(f"  • Neurônios ocultos: {hparams['num_neuronios_ocultos']}")
     print(f"  • Função de ativação: {hparams['func_ativacao'].__name__}")
-    if tipo == "k-fold": print(f"  • Folds: {hparams["folds"]}")
+    if tipo == "k-fold": print(f"  • Folds: {hparams['folds']}")
     print("=====================================\n")
 
 # Treinamento padrão (com ou sem validação)
