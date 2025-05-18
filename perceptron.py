@@ -34,6 +34,12 @@ def adicionar_bias(matriz_entradas):
     ones = np.ones((matriz_entradas.shape[0], 1))
     return np.hstack((ones, matriz_entradas))
 
+def embaralhar_dados(x, y, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    indices = np.random.permutation(x.shape[0])
+    return x[indices], y[indices]
 
 # Inicializa pesos aleatórios com valores pequenos
 def inicia_pesos(numero_pesos_escondida, neuronios_camada_saida, num_neuronios_ocultos):
@@ -241,6 +247,9 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
     if tipo:
         exibir_parametros(hparams, tipo)
 
+    if hparams["embaralhar"] is True and tipo == "simples":
+        x_treino, y_treino = embaralhar_dados(x_treino, y_treino, 42)
+
     plot = hparams["plot"]
 
     numero_pesos_escondida = x_treino.shape[1]
@@ -263,6 +272,9 @@ def treinamento(x_treino, y_treino, hparams, x_validacao=None, y_validacao=None,
 
 # Treinamento com validação
 def treinamento_validacao(entradas_brutas, saidas_desejadas, hparams, tamanho_validacao):
+    if hparams["embaralhar"] is True:
+        entradas_brutas, saidas_desejadas = embaralhar_dados(entradas_brutas, saidas_desejadas, 42)
+
     num_amostras = entradas_brutas.shape[0]
     total_saidas = saidas_desejadas.shape[0]
 
@@ -285,16 +297,8 @@ def treinamento_folds(x_treino, y_treino, hparams):
     exibir_parametros(hparams, "k-fold")
     numero_folds = hparams["folds"]
 
-    tamanho_treinamento = x_treino.shape[0]
-
-    np.random.seed(42)
-    # Gera uma permutação aleatória dos índices (embaralhamento dos dados)
-    indices = np.arange(tamanho_treinamento)
-    np.random.shuffle(indices)
-
-    # Aplica a permutação às entradas e saídas
-    x_treino = x_treino[indices]
-    y_treino = y_treino[indices]
+    if hparams["embaralhar"] is True:
+        x_treino, y_treino = embaralhar_dados(x_treino, y_treino, 42)
 
     # Divide os dados embaralhados em 'numero_folds' partes iguais (ou quase iguais)
     folds_x = np.array_split(x_treino, numero_folds)

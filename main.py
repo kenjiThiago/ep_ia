@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument("-f", "--folds", type=int, default=10, help="Número de folds (apenas se modo for kfold).")
     parser.add_argument("-p", "--plot", choices=["True", "False"], default="True", help="Mostrar gráfico do erro quadrático médio")
     parser.add_argument("-a", "--ativacao", choices=["sigmoide", "tanh"], default="sigmoide", help="Função de ativação usada na rede neural")
+    parser.add_argument("--embaralhar", action="store_true", help="Se definido, embaralha os dados antes do treinamento.")
 
     args = parser.parse_args()
     return args
@@ -61,6 +62,7 @@ hparams = {
     "folds": args.folds,
     "func_ativacao": pc.FUNCOES_ATIVACAO[args.ativacao][0],
     "func_derivada": pc.FUNCOES_ATIVACAO[args.ativacao][1],
+    "embaralhar": args.embaralhar
 }
 
 # Usa 18% dos dados de treinamento para a validação
