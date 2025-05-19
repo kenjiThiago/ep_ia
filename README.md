@@ -6,10 +6,17 @@
 python -m venv .venv
 ```
 
+### Linux
+
 ```sh
 source .venv/bin/activate
 ```
 
+### Windows
+
+```sh
+.\.venv\Scripts\Activate
+```
 
 ## Instalar as dependências
 
